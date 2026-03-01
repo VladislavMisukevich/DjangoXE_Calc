@@ -1,0 +1,21 @@
+<h1>Кабинет врача</h1>
+
+<table>
+    <tr>
+        <th>Пациент</th>
+        <th>Продукт</th>
+        <th>Вес</th>
+        <th>ХЕ</th>
+        <th>Дата</th>
+    </tr>
+
+    {% for meal in meals %}
+    <tr>
+        <td>{{ meal.user.username }}</td>
+        <td>{{ meal.product.name }}</td>
+        <td>{{ meal.weight }} г</td>
+        <td>{{ meal.xe }}</td>
+        <td>{{ meal.date }}</td>
+    </tr>
+    {% endfor %}
+</table>

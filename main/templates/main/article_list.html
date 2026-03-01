@@ -1,0 +1,70 @@
+{% extends 'main/base.html' %}
+{% block title %}Советы{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <!-- Приветствие -->
+  <div class="mb-5 text-center">
+    <h1 class="mb-2">📰 Добро пожаловать в раздел статей</h1>
+    <p class="text-muted fs-5">
+      Здесь вы найдёте проверенные советы по контролю ХЕ, питанию и жизни с диабетом.
+    </p>
+  </div>
+
+  {% if articles %}
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+      {% for article in articles %}
+        <div class="col">
+          <div class="card h-100 shadow border-0 rounded-4 overflow-hidden">
+            <!-- Обложка -->
+            {% if article.image %}
+              <img src="{{ article.image.url }}" class="card-img-top" alt="Обложка статьи">
+            {% else %}
+              <div class="bg-light d-flex align-items-center justify-content-center" style="height: 160px;">
+                <span class="fs-1">📘</span>
+              </div>
+            {% endif %}
+
+            <div class="card-body">
+              <h5 class="card-title text-primary">
+                {{ article.title }}
+              </h5>
+              {% if article.summary %}
+                <p class="card-text text-muted">{{ article.summary }}</p>
+              {% endif %}
+            </div>
+
+            <div class="card-footer bg-white border-0 d-flex justify-content-between align-items-center">
+              <small class="text-muted">🕒 {{ article.created_at|date:"d E Y" }}</small>
+              <a href="{% url 'article_detail' article.pk %}" class="btn btn-sm btn-outline-primary">Читать →</a>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="text-center text-muted">Пока нет статей.</p>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+  .card-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+  }
+  .card:hover {
+    transform: translateY(-4px);
+    transition: 0.2s ease-in-out;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+  }
+  .card-footer a.btn {
+    transition: all 0.2s;
+  }
+  .card-footer a.btn:hover {
+    background-color: #0d6efd;
+    color: #fff;
+  }
+</style>
+{% endblock %}

@@ -1,0 +1,106 @@
+{% extends "main/base.html" %}
+{% block title %}Калькулятор ХЕ{% endblock %}
+
+{% block content %}
+<div class="card p-4 shadow-sm">
+    <h1 class="mb-2"><i class="bi bi-calculator"></i> Калькулятор ХЕ</h1>
+    <p class="text-muted mb-4">Узнай, сколько хлебных единиц и углеводов содержит любой продукт.</p>
+
+    <form method="get" class="row g-3">
+        <div class="col-md-6">
+            <label for="product" class="form-label">🍎 Продукт:</label>
+            <input
+                type="text"
+                id="product"
+                name="product"
+                required
+                class="form-control form-control-lg"
+                list="products"
+                placeholder="например, яблоко"
+                value="{{ product_name }}"
+            >
+            <datalist id="products">
+                {% for product in products %}
+                    <option value="{{ product.name }}">
+                {% endfor %}
+            </datalist>
+        </div>
+
+        <div class="col-md-6">
+            <label for="weight" class="form-label">⚖️ Вес (в граммах):</label>
+            <input
+                type="number"
+                id="weight"
+                name="weight"
+                min="1"
+                required
+                class="form-control form-control-lg"
+                placeholder="например, 120"
+                value="{{ weight_value }}"
+            >
+        </div>
+
+        <div class="col-12 d-grid d-md-block">
+            <button type="submit" class="btn btn-primary btn-lg mt-2">
+                🧮 Рассчитать
+            </button>
+        </div>
+    </form>
+
+    {% if result %}
+        {% if result == "Продукт не найден" %}
+            <div class="alert alert-danger mt-4 shadow-sm rounded">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                {{ result }}
+            </div>
+        {% else %}
+            <div class="alert alert-success mt-4 shadow-sm rounded">
+                <h5 class="mb-2"><i class="bi bi-check-circle-fill me-2"></i>Результат расчёта</h5>
+                <ul class="mb-0">
+                    <li><strong>Углеводы:</strong> {{ result.carbs_g }} г</li>
+                    <li><strong>Хлебные единицы:</strong> {{ result.xe }} ХЕ</li>
+                </ul>
+            </div>
+        {% endif %}
+    {% endif %}
+
+    <div class="mt-4">
+        <a href="{% url 'product_list' %}" class="btn btn-outline-secondary">
+            📘 Перейти к справочнику продуктов
+        </a>
+    </div>
+
+    <p class="text-muted small mt-3">
+        ℹ️ 1 ХЕ ≈ 12 г углеводов. Вес указывается в граммах.
+    </p>
+</div>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+    .form-control-lg {
+        border-radius: 12px;
+    }
+
+    .btn-lg {
+        border-radius: 50px;
+        transition: transform 0.2s ease, background-color 0.3s ease;
+    }
+
+    .btn-lg:hover {
+        transform: scale(1.05);
+        background-color: #0d6efd;
+        color: white;
+    }
+
+    .alert {
+        font-size: 1.1rem;
+        animation: fadeIn 0.3s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(5px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+{% endblock %}

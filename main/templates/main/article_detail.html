@@ -1,0 +1,45 @@
+{% extends 'main/base.html' %}
+{% block title %}{{ article.title }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <h1 class="mb-3">{{ article.title }}</h1>
+  <p class="text-muted">🕒 {{ article.created_at|date:"d E Y" }}</p>
+
+  <div class="article-content">
+    {{ article.content|safe }}
+  </div>
+
+  <div class="mt-4 d-flex flex-column flex-md-row justify-content-between">
+    <a href="{% url 'article_list' %}" class="btn btn-outline-secondary mb-2 mb-md-0">← Назад к статьям</a>
+    {% if next_article %}
+      <a href="{% url 'article_detail' next_article.pk %}" class="btn btn-outline-primary">Следующая статья →</a>
+    {% endif %}
+  </div>
+
+{% if related_articles %}
+  <hr class="my-4">
+  <h5 class="mb-3">📖 Что ещё почитать</h5>
+
+  <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+    {% for rel in related_articles %}
+      <div class="col">
+        <div class="card h-100 shadow-sm border-0">
+          <div class="card-body">
+            <h5 class="card-title">{{ rel.title }}</h5>
+            {% if rel.summary %}
+              <p class="card-text text-muted">{{ rel.summary }}</p>
+            {% endif %}
+          </div>
+          <div class="card-footer bg-white border-0">
+            <small class="text-muted">🕒 {{ rel.created_at|date:"d E Y" }}</small><br>
+            <a href="{% url 'article_detail' rel.pk %}" class="btn btn-sm btn-outline-primary mt-2">Читать →</a>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+
+</div>
+{% endblock %}

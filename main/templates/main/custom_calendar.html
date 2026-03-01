@@ -1,0 +1,264 @@
+{% extends 'main/base.html' %}
+{% load custom_tags %}
+{% load custom_filters %}
+
+{% block content %}
+<div class="card p-4">
+  <h2>{{ month_name }} {{ year }}</h2>
+  <div class="mb-3">
+    <a href="?month={{ month|add:"-1" }}&year={{ year }}">← Предыдущий</a> |
+    <a href="?month={{ month|add:"1" }}&year={{ year }}">Следующий →</a>
+  </div>
+
+  <table class="table table-bordered text-center calendar-table">
+    <thead class="table-light">
+      <tr>
+        {% for day in weekdays %}
+          <th>{{ day }}</th>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for week in calendar_weeks %}
+        <tr>
+          {% for day in week %}
+            {% with day_str=day|date:"Y-m-d" %}
+              {% with meals=meals_by_date|get_item:day_str %}
+                <td class="{% if day.month != month %}text-muted bg-light{% endif %}" style="vertical-align: top;">
+                  <div>
+                    <strong>{{ day.day }}</strong>
+                    <a href="{% url 'add_meal' %}?date={{ day_str }}" class="calendar-plus" title="Добавить приём пищи">➕</a>
+                  </div>
+
+                  <div onclick="loadMeals('{{ day_str }}')" style="cursor: pointer;">
+                    <div class="d-flex flex-column align-items-center mt-2">
+                      {% if meals %}
+                        <div class="badge bg-success mb-1">
+                          {{ meals|length }} приём(ов)
+                        </div>
+                      {% endif %}
+                      {% with xe=xe_by_date|get_item:day_str %}
+                        {% if xe %}
+                          {% if xe > daily_xe_norm %}
+                            <div class="badge bg-danger">
+                              {{ xe|floatformat:2 }}/{{ daily_xe_norm|floatformat:2 }} ХЕ
+                            </div>
+                          {% else %}
+                            <div class="badge bg-info text-dark">
+                              {{ xe|floatformat:2 }}/{{ daily_xe_norm|floatformat:2 }} ХЕ
+                            </div>
+                          {% endif %}
+                        {% endif %}
+                      {% endwith %}
+                    </div>
+                  </div>
+                </td>
+              {% endwith %}
+            {% endwith %}
+          {% endfor %}
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <!-- 📱 Мобильный календарь -->
+  <div class="mobile-calendar">
+    {% for week in calendar_weeks %}
+      {% for day in week %}
+        {% if day.month == month %}
+          {% with day_str=day|date:"Y-m-d" %}
+            {% with meals=meals_by_date|get_item:day_str %}
+              <div class="mobile-day-card" onclick="loadMeals('{{ day_str }}')">
+                <div class="mobile-day-header">
+                  <strong>{{ day|date:"d F" }}</strong>
+                  <a href="{% url 'add_meal' %}?date={{ day_str }}">➕</a>
+                </div>
+
+                {% if meals %}
+                  <div class="badge bg-success">
+                    {{ meals|length }} приём(ов)
+                  </div>
+                {% endif %}
+
+                {% with xe=xe_by_date|get_item:day_str %}
+                  {% if xe %}
+                    {% if xe > daily_xe_norm %}
+                      <div class="badge bg-danger mt-1">
+                        {{ xe|floatformat:2 }}/{{ daily_xe_norm|floatformat:2 }} ХЕ
+                      </div>
+                    {% else %}
+                      <div class="badge bg-info text-dark mt-1">
+                        {{ xe|floatformat:2 }}/{{ daily_xe_norm|floatformat:2 }} ХЕ
+                      </div>
+                    {% endif %}
+                  {% endif %}
+                {% endwith %}
+              </div>
+            {% endwith %}
+          {% endwith %}
+        {% endif %}
+      {% endfor %}
+    {% endfor %}
+  </div>
+
+
+<div class="row mt-4 gx-4">
+  <!-- Карточка: График -->
+  <div class="col-md-8 mb-3">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <h5 class="card-title text-center">График съеденных ХЕ по дням</h5>
+        <canvas id="xeChart" width="100%" height="50"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Карточка: Приёмы пищи -->
+  <div class="col-md-4 mb-3">
+    <div class="card shadow-sm h-100">
+      <div class="card-body" id="meal-details">
+        <p class="text-muted">Нажмите на ячейку календаря, чтобы посмотреть приёмы пищи.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+  const xeData = {
+    labels: {{ day_labels|safe }}, // ['1', '2', ..., '31']
+    datasets: [{
+      label: 'Съедено ХЕ',
+      data: {{ xe_values|safe }},  // [2.5, 3.0, 0, ...]
+      backgroundColor: 'rgba(54, 162, 235, 0.5)',
+      borderColor: 'rgba(54, 162, 235, 1)',
+      borderWidth: 2,
+      fill: true,
+      tension: 0.2
+    },
+    {
+      label: 'Норма ХЕ',
+      data: Array({{ day_labels|length }}).fill({{ daily_xe_norm|floatformat:2 }}),
+      borderColor: 'rgba(255, 99, 132, 1)',
+      borderWidth: 2,
+      borderDash: [5, 5],
+      fill: false
+    }]
+  };
+
+  const ctx = document.getElementById('xeChart').getContext('2d');
+  const xeChart = new Chart(ctx, {
+    type: 'line',
+    data: xeData,
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          position: 'top',
+        },
+        tooltip: {
+          mode: 'index',
+          intersect: false,
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          title: {
+            display: true,
+            text: 'ХЕ'
+          }
+        },
+        x: {
+          title: {
+            display: true,
+            text: 'Дни месяца'
+          }
+        }
+      }
+    }
+  });
+
+  function loadMeals(date) {
+    fetch(`/api/meals/?date=${date}`)
+      .then(response => response.json())
+      .then(data => {
+        let container = document.getElementById("meal-details");
+        if (data.length === 0) {
+          container.innerHTML = `<p>Нет приёмов пищи на <strong>${date}</strong>.</p>`;
+        } else {
+          container.innerHTML = `<h5>Приёмы пищи на <strong>${date}</strong>:</h5><ul>` +
+            data.map(meal =>
+              `<li>
+                <a href="/meal/${meal.id}/?month={{ month }}&year={{ year }}">
+                  ${meal.product_name} — ${meal.weight} г
+                </a>
+              </li>`
+            ).join("") +
+            "</ul>";
+        }
+        container.scrollIntoView({ behavior: "smooth" });
+      });
+  }
+</script>
+
+<style>
+  /* ====== DESKTOP ====== */
+  .calendar-table td {
+    height: 100px;
+    padding: 5px;
+    border-bottom: none !important;
+  }
+
+  .calendar-plus {
+    text-decoration: none;
+  }
+
+  /* ====== MOBILE CALENDAR ====== */
+  .mobile-calendar {
+    display: none;
+  }
+
+  .mobile-day-card {
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 12px;
+    margin-bottom: 10px;
+    background: #fff;
+  }
+
+  .mobile-day-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+
+  /* ====== MEDIA ====== */
+  @media (max-width: 768px) {
+    .calendar-table {
+      display: none;
+    }
+
+    .mobile-calendar {
+      display: block;
+    }
+  }
+  .mobile-day-header strong {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 75%;
+    display: block;
+  }
+
+  .mobile-day-header a {
+    font-size: 20px;
+    line-height: 1;
+  }
+
+</style>
+
+{% endblock %}

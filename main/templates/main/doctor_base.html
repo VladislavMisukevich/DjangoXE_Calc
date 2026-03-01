@@ -1,0 +1,72 @@
+{% extends "main/base.html" %}
+
+{% block title %}Панель врача{% endblock %}
+
+{% block content %}
+
+<!-- Отступ под верхний navbar -->
+<div style="padding-top: 70px;">
+
+    <div class="container-fluid">
+        <div class="row">
+
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 bg-dark text-white p-3
+                        position-fixed start-0"
+                 style="top: 70px; height: calc(100vh - 70px); overflow-y: auto;">
+
+                <h4 class="text-center mb-4">👨‍⚕️ Doctor Panel</h4>
+
+                <ul class="nav flex-column">
+
+                    <li class="nav-item mb-2">
+                        <a class="nav-link text-white"
+                           href="{% url 'doctor_patients' %}">
+                            📋 Пациенты
+                        </a>
+                    </li>
+
+                    <li class="nav-item mb-2">
+                        <a class="nav-link text-white"
+                           href="{% url 'send_doctor_request' %}">
+                            ➕ Добавить пациента
+                        </a>
+                    </li>
+
+                    <li class="nav-item mb-2">
+                        <a class="nav-link text-white"
+                           href="{% url 'profile' %}">
+                            👤 Профиль
+                        </a>
+                    </li>
+
+                    <hr class="border-light">
+
+                    <li class="nav-item mt-3">
+                        <form method="post" action="{% url 'logout' %}">
+                            {% csrf_token %}
+                            <button type="submit"
+                                    class="btn btn-link nav-link text-danger p-0 text-start">
+                                🚪 Выйти
+                            </button>
+                        </form>
+                    </li>
+
+                </ul>
+            </div>
+
+            <!-- Main content -->
+            <div class="col-md-9 col-lg-10 offset-md-3 offset-lg-2 p-4"
+                 style="min-height: calc(100vh - 70px);">
+
+                {% block doctor_content %}
+                {% endblock %}
+
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

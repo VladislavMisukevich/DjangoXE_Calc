@@ -1,0 +1,265 @@
+{% extends "main/doctor_base.html" %}
+{% block title %}Пациент {{ patient.username }}{% endblock %}
+
+{% block doctor_content %}
+<div class="container mt-4">
+
+    <!-- Заголовок -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold">👤 {{ patient.username }}</h2>
+            <p class="text-muted mb-0">Детальная аналитика пациента</p>
+        </div>
+
+        <a href="{% url 'doctor_patient_pdf' patient.id %}"
+           class="btn btn-outline-secondary rounded-pill px-4">
+            📄 Скачать PDF
+        </a>
+    </div>
+
+    <!-- Фильтр -->
+    <div class="card p-4 mb-4">
+        <h5 class="fw-bold mb-3">📅 Фильтр по дате</h5>
+        <form method="get" class="row g-3 align-items-end">
+
+            <div class="col-md-4">
+                <label class="form-label">С</label>
+                <input type="date" name="start_date"
+                       value="{{ start_date }}"
+                       class="form-control">
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">По</label>
+                <input type="date" name="end_date"
+                       value="{{ end_date }}"
+                       class="form-control">
+            </div>
+
+            <div class="col-md-4">
+                <button type="submit"
+                        class="btn btn-primary w-100 rounded-pill">
+                    Применить
+                </button>
+            </div>
+
+        </form>
+    </div>
+
+    <!-- Аналитика -->
+    <div class="row mb-4">
+
+        <div class="col-md-3">
+            <div class="card p-3 text-center">
+                <small class="text-muted">Норма</small>
+                <h4 class="fw-bold">{{ daily_norm }} ХЕ</h4>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card p-3 text-center">
+                <small class="text-muted">Среднее</small>
+                <h4 class="fw-bold">{{ average_xe }} ХЕ</h4>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card p-3 text-center">
+                <small class="text-muted">Отклонение</small>
+                <h4 class="fw-bold">{{ deviation_percent }} %</h4>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card p-3 text-center">
+
+                <small class="text-muted">Статус</small>
+
+                {% if status == "Норма" %}
+                    <span class="badge bg-success fs-6 mt-2">
+                        ✓ {{ status }}
+                    </span>
+                {% elif status == "Риск" %}
+                    <span class="badge bg-warning text-dark fs-6 mt-2">
+                        ⚠ {{ status }}
+                    </span>
+                {% else %}
+                    <span class="badge bg-danger fs-6 mt-2">
+                        ⛔ {{ status }}
+                    </span>
+                {% endif %}
+
+            </div>
+        </div>
+
+    </div>
+
+    <!-- График -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body">
+    
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold mb-0">📈 Динамика потребления ХЕ</h5>
+                <span class="badge bg-light text-dark">
+                    Норма: {{ daily_norm }} ХЕ
+                </span>
+            </div>
+    
+            <!-- ЖЁСТКО задаём высоту -->
+            <div class="chart-container">
+                <canvas id="xeChart"></canvas>
+            </div>
+    
+        </div>
+    </div>
+
+    <!-- Сумма по дням -->
+    <div class="card p-4 mb-4">
+        <h5 class="fw-bold mb-3">📅 Сумма ХЕ по дням</h5>
+
+        {% if xe_by_day %}
+        <ul class="list-group">
+            {% for day in xe_by_day %}
+            <li class="list-group-item d-flex justify-content-between">
+                <span>{{ day.date }}</span>
+                <strong>{{ day.total_xe }} ХЕ</strong>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+            <p class="text-muted">Нет данных за выбранный период</p>
+        {% endif %}
+    </div>
+
+    <!-- Последние приёмы -->
+    <div class="card p-4 mb-5">
+        <h5 class="fw-bold mb-3">🍽 Последние приёмы пищи</h5>
+
+        {% if meals %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Продукт</th>
+                        <th>Вес (г)</th>
+                        <th>ХЕ</th>
+                        <th>Дата</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for meal in meals %}
+                    <tr>
+                        <td>{{ meal.product.name }}</td>
+                        <td>{{ meal.weight }}</td>
+                        <td>{{ meal.xe }}</td>
+                        <td>{{ meal.date }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+            <p class="text-muted">Нет приёмов пищи</p>
+        {% endif %}
+    </div>
+
+</div>
+
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+const ctx = document.getElementById('xeChart');
+
+new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: {{ chart_dates|safe }},
+        datasets: [
+            {
+                label: 'Фактическое потребление',
+                data: {{ chart_totals|safe }},
+                borderColor: '#0d6efd',
+                backgroundColor: 'rgba(13,110,253,0.15)',
+                borderWidth: 3,
+                pointRadius: 4,
+                pointHoverRadius: 7,
+                tension: 0.35,
+                fill: true
+            },
+            {
+                label: 'Рекомендуемая норма',
+                data: {{ norm_line|safe }},
+                borderColor: '#198754',
+                borderDash: [8,6],
+                borderWidth: 2,
+                pointRadius: 0,
+                fill: false
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,   // ← КЛЮЧЕВОЕ
+
+        interaction: {
+            mode: 'index',
+            intersect: false
+        },
+
+        plugins: {
+            legend: {
+                position: 'top',
+                labels: {
+                    usePointStyle: true
+                }
+            },
+            tooltip: {
+                backgroundColor: '#1e1e2f',
+                titleColor: '#fff',
+                bodyColor: '#fff',
+                padding: 12,
+                cornerRadius: 8
+            }
+        },
+
+        scales: {
+            x: {
+                grid: {
+                    display: false
+                }
+            },
+            y: {
+                beginAtZero: true,
+                grid: {
+                    color: 'rgba(0,0,0,0.05)'
+                },
+                ticks: {
+                    stepSize: 1
+                }
+            }
+        }
+    }
+});
+</script>
+
+<style>
+.chart-container {
+    position: relative;
+    width: 100%;
+    height: 450px;   /* ← вот тут реальная высота */
+}
+
+.card {
+    border-radius: 14px;
+}
+
+.badge {
+    padding: 8px 14px;
+    font-weight: 500;
+}
+</style>
+{% endblock %}

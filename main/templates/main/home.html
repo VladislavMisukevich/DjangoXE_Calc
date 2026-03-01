@@ -1,0 +1,161 @@
+{% extends 'main/base.html' %}
+{% load static %}
+
+{% block title %}Главная{% endblock %}
+
+{% block content %}
+<div class="video-wrapper" id="hero">
+  <video autoplay muted loop playsinline>
+    <source src="{% static 'main/videos/background.mp4' %}" type="video/mp4">
+    Ваш браузер не поддерживает видео.
+  </video>
+  <div class="video-overlay">
+    <div class="container py-5">
+      <h1 class="display-4 animate__animated animate__fadeInDown text-center">🍞 Контроль углеводов — просто</h1>
+      <p class="lead animate__animated animate__fadeInUp text-center">Первый в Беларуси визуальный калькулятор с календарём питания</p>
+      <div class="text-center">
+        <a href="{% url 'calculator' %}" class="btn btn-lg btn-light mt-3 animate__animated animate__fadeInUp hero-btn">
+          <i class="bi bi-calculator"></i> Калькулятор ХЕ
+        </a>
+      </div>
+      <div class="scroll-down mt-5 text-center">
+        <a href="#features" class="scroll-link">
+          <i class="bi bi-chevron-double-down"></i>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Блок преимуществ -->
+<section id="features" class="py-5 bg-light text-center">
+  <div class="container">
+    <h2 class="mb-5 fw-bold">Наши преимущества</h2>
+    <div class="row">
+      <div class="col-md-4 mb-4">
+        <div class="card h-100 shadow-sm">
+          <div class="card-body">
+            <i class="bi bi-book fs-1 text-primary"></i>
+            <h5 class="mt-3">Справочник продуктов</h5>
+            <p class="text-muted">Быстрый поиск и информация по углеводам на 100 г.</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4 mb-4">
+        <div class="card h-100 shadow-sm">
+          <div class="card-body">
+            <i class="bi bi-calendar-heart fs-1 text-success"></i>
+            <h5 class="mt-3">Календарь питания</h5>
+            <p class="text-muted">Удобный способ отслеживать приёмы пищи и ХЕ по дням.</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4 mb-4">
+        <div class="card h-100 shadow-sm">
+          <div class="card-body">
+            <i class="bi bi-lightbulb fs-1 text-warning"></i>
+            <h5 class="mt-3">Полезные советы</h5>
+            <p class="text-muted">Статьи и материалы по питанию, диабету и здоровью.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+
+
+{% block extra_head %}
+<style>
+  html, body {
+    margin: 0;
+    overflow-x: hidden;
+    font-family: 'Manrope', sans-serif;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    padding: 0;
+  }
+
+  .video-wrapper {
+    position: relative;
+    width: 100%;
+    height: 100vh; /* полный экран */
+    overflow: hidden;
+  }
+
+  .video-wrapper video {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    min-width: 100%;
+    min-height: 100%;
+    transform: translate(-50%, -50%);
+    object-fit: cover;
+    z-index: -1;
+    filter: brightness(50%);
+  }
+
+  .video-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    text-align: center;
+    color: white;
+    padding: 0 20px;
+    z-index: 1;
+  }
+
+  .hero-btn {
+    padding: 0.75rem 1.5rem;
+    font-size: 1.25rem;
+    border-radius: 50px;
+    transition: all 0.3s ease;
+  }
+
+  .hero-btn:hover {
+    transform: scale(1.05);
+    background-color: #f8f9fa;
+    color: #000;
+  }
+
+  .scroll-down a {
+    display: inline-block;
+    font-size: 2rem;
+    color: white;
+    animation: bounce 1.5s infinite;
+    text-decoration: none;
+  }
+
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(10px); }
+  }
+
+  .card i {
+    margin-bottom: 0.5rem;
+  }
+
+  .card {
+    transition: transform 0.3s ease;
+  }
+
+  .card:hover {
+    transform: translateY(-5px);
+  }
+</style>
+
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700&display=swap" rel="stylesheet">
+{% endblock %}
+
+

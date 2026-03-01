@@ -1,0 +1,18 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+
+<h1>📋 Копирование приёмов пищи</h1>
+
+<form method="post">
+  {% csrf_token %}
+  <fieldset class="module aligned">
+    {{ form.as_p }}
+  </fieldset>
+
+  <div class="submit-row">
+    <input type="submit" value="Скопировать" class="default">
+    <a href="../" class="button">Отмена</a>
+  </div>
+</form>
+
+{% endblock %}

@@ -1,0 +1,92 @@
+{% extends 'main/base.html' %}
+{% load static %}
+{% block content %}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{% static 'main/js/macros_chart.js' %}"></script>
+
+<style>
+.analyzer-container {
+  max-width: 700px;
+  margin: 60px auto;
+  text-align: center;
+  padding: 20px;
+}
+.upload-box {
+  display: block;
+  border: 2px dashed #0099ff;
+  border-radius: 12px;
+  padding: 40px 20px;
+  background: #f9f9f9;
+  cursor: pointer;
+}
+.result-card {
+  margin-top: 40px;
+  background: white;
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  text-align: left;
+}
+.error-card {
+  background: #fff4f4;
+  border-left: 5px solid #ff4d4d;
+  padding: 20px;
+  border-radius: 10px;
+  margin-top: 40px;
+}
+</style>
+
+<div class="analyzer-container">
+  <h1>🔍 Анализ блюда по фото</h1>
+
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <label class="upload-box">
+      📸 Загрузить фото
+      <input type="file" name="image" accept="image/*" hidden onchange="this.form.submit()">
+    </label>
+  </form>
+
+  {% if result %}
+    <div class="result-card">
+      <h3>🍽 {{ result.name|default:"Неизвестное блюдо" }}</h3>
+
+      {% if result.ingredients %}
+        <p><b>Ингредиенты:</b> {{ result.ingredients|join:", " }}</p>
+      {% endif %}
+
+      {% if result.macros_per_100g %}
+        <p>
+          <b>БЖУ (100 г):</b>
+          {{ result.macros_per_100g.protein_g }} /
+          {{ result.macros_per_100g.fat_g }} /
+          {{ result.macros_per_100g.carbs_g }} г
+        </p>
+
+        <canvas id="macrosChart" style="max-width:300px;margin:auto;"></canvas>
+
+        <script>
+          renderMacrosChart(
+            {{ result.macros_per_100g.protein_g|default:0 }},
+            {{ result.macros_per_100g.fat_g|default:0 }},
+            {{ result.macros_per_100g.carbs_g|default:0 }}
+          );
+        </script>
+      {% endif %}
+
+      {% if result.calories_per_100g %}
+        <p><b>Калории:</b> {{ result.calories_per_100g }} ккал</p>
+      {% endif %}
+
+      {% if result.xe_per_100g %}
+        <p><b>ХЕ:</b> {{ result.xe_per_100g }} ХЕ / 100 г</p>
+      {% endif %}
+    </div>
+
+  {% elif error %}
+    <div class="error-card">{{ error }}</div>
+  {% endif %}
+</div>
+
+{% endblock %}

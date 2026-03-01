@@ -1,0 +1,54 @@
+{% extends 'main/base.html' %}
+
+{% block title %}
+Детали приёма пищи
+{% endblock %}
+
+{% block content %}
+<div class="card p-4">
+
+  <h1 class="mb-4">🍽️ Детали приёма пищи</h1>
+
+  <ul class="list-group mb-3">
+    <li class="list-group-item">
+      <strong>📅 Дата:</strong> {{ meal.date }}
+    </li>
+    <li class="list-group-item">
+      <strong>⏰ Время:</strong> {{ meal.time|default:"—" }}
+    </li>
+    <li class="list-group-item">
+      <strong>🥗 Продукт:</strong> {{ meal.product.name }}
+    </li>
+    <li class="list-group-item">
+      <strong>⚖️ Вес:</strong> {{ meal.weight }} г
+    </li>
+    <li class="list-group-item">
+      <strong>🥖 Углеводы:</strong> {{ meal.carbs|floatformat:1 }} г
+    </li>
+    <li class="list-group-item">
+      <strong>🍞 Хлебные единицы:</strong> {{ meal.xe|floatformat:2 }}
+    </li>
+  </ul>
+
+  <div class="d-flex justify-content-between">
+    <a
+      href="{% url 'custom_calendar' %}?month={{ request.GET.month }}&year={{ request.GET.year }}"
+      class="btn btn-outline-secondary"
+    >
+      ← Назад
+    </a>
+
+    <form
+      method="post"
+      action="{% url 'delete_meal' meal.pk %}"
+      onsubmit="return confirm('Удалить этот приём пищи?');"
+    >
+      {% csrf_token %}
+      <button type="submit" class="btn btn-danger">
+        🗑️ Удалить
+      </button>
+    </form>
+  </div>
+
+</div>
+{% endblock %}

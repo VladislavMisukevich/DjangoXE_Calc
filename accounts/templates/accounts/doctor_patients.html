@@ -1,0 +1,92 @@
+{% extends "main/doctor_base.html" %}
+{% block title %}Кабинет врача{% endblock %}
+
+{% block doctor_content %}
+<div class="container mt-4">
+
+  <!-- Заголовок -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="fw-bold">👨‍⚕️ Кабинет врача</h2>
+      <p class="text-muted mb-0">Управление пациентами и мониторинг ХЕ</p>
+    </div>
+
+    <a href="{% url 'send_doctor_request' %}" class="btn btn-primary rounded-pill px-4">
+      ➕ Добавить пациента
+    </a>
+  </div>
+
+
+  <!-- Статистика -->
+  <div class="row mb-4">
+    <div class="col-md-4">
+      <div class="card p-3 text-center">
+        <h5 class="text-muted">Всего пациентов</h5>
+        <h3 class="fw-bold">{{ patients|length }}</h3>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card p-3 text-center">
+        <h5 class="text-muted">Ожидают подтверждения</h5>
+        <h3 class="fw-bold">
+          {{ pending_count }}
+        </h3>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card p-3 text-center">
+        <h5 class="text-muted">Активные пациенты</h5>
+        <h3 class="fw-bold text-success">
+          {{ patients|length }}
+        </h3>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Пациенты -->
+  {% if patients %}
+  <div class="row g-4">
+
+    {% for patient in patients %}
+    <div class="col-md-6 col-lg-4">
+      <div class="card p-4 h-100">
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="mb-0 fw-bold">👤 {{ patient.username }}</h5>
+          <span class="badge bg-light text-dark">
+            Норма: {{ patient.daily_xe_norm }} ХЕ
+          </span>
+        </div>
+
+        <p class="text-muted small mb-3">
+          Email: {{ patient.email|default:"—" }}
+        </p>
+
+        <div class="d-grid">
+          <a href="{% url 'doctor_patient_detail' patient.id %}"
+             class="btn btn-outline-primary rounded-pill">
+            📊 Открыть профиль
+          </a>
+        </div>
+
+      </div>
+    </div>
+    {% endfor %}
+
+  </div>
+
+  {% else %}
+  <div class="card p-5 text-center">
+    <h5 class="mb-3">У вас пока нет подтверждённых пациентов</h5>
+    <a href="{% url 'send_doctor_request' %}"
+       class="btn btn-primary rounded-pill px-4">
+      ➕ Добавить первого пациента
+    </a>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

@@ -1,0 +1,38 @@
+{% extends "main/base.html" %}
+{% block title %}О сайте — XE-Калькулятор{% endblock %}
+
+{% block content %}
+<div class="card p-4 shadow-sm">
+    <h1 class="mb-4"><i class="bi bi-info-circle"></i> О сайте</h1>
+
+    <p>
+        <strong>XE-Калькулятор</strong> — это бесплатный онлайн-сервис для людей с диабетом, который помогает:
+    </p>
+
+    <ul class="list-group list-group-flush mb-4">
+        <li class="list-group-item"><i class="bi bi-calculator me-2 text-primary"></i>Рассчитывать количество хлебных единиц (ХЕ) в пище</li>
+        <li class="list-group-item"><i class="bi bi-droplet-half me-2 text-primary"></i>Подбирать дозу инсулина на основе сахара</li>
+        <li class="list-group-item"><i class="bi bi-book me-2 text-primary"></i>Получать информацию о продуктах (углеводы, вес и пр.)</li>
+    </ul>
+
+    <h4 class="mt-4"><i class="bi bi-question-circle"></i> Что такое хлебные единицы?</h4>
+    <p>
+        <strong>1 ХЕ</strong> = 10–12 г углеводов. Это условная единица, принятая для удобства расчёта. <br>
+        Например, 1 кусок хлеба или 1 яблоко ≈ <strong>1 ХЕ</strong>.
+    </p>
+
+    <h4 class="mt-4"><i class="bi bi-gear-wide-connected"></i> Как пользоваться калькулятором</h4>
+    <ol class="mb-4">
+        <li>Выберите продукт из списка</li>
+        <li>Укажите вес в граммах</li>
+        <li>Нажмите <strong>«Рассчитать»</strong></li>
+        <li>Получите результат в ХЕ</li>
+    </ol>
+
+    <p>Вы также можете воспользоваться <a href="{% url 'product_list' %}">справочником продуктов</a> с поиском и сортировкой.</p>
+
+    <p class="text-muted mt-4">
+        ⚠️ Проект разработан в образовательных целях. Перед применением — проконсультируйтесь с врачом.
+    </p>
+</div>
+{% endblock %}
