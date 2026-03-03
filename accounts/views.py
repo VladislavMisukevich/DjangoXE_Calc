@@ -20,7 +20,6 @@ from reportlab.platypus import (
 from reportlab.lib import colors
 from reportlab.lib.units import inch
 from reportlab.lib.styles import ParagraphStyle
-
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.cidfonts import UnicodeCIDFont
 
@@ -107,19 +106,14 @@ def doctor_patients(request):
         patient_relations__is_confirmed=True,
     ).distinct()
 
-    pending_count = DoctorPatientRelation.objects.filter(
-        doctor=request.user,
-        is_confirmed=False
-    ).count()
-
     pending_requests = DoctorPatientRelation.objects.filter(
         doctor=request.user,
         is_confirmed=False
     )
-    
+
     return render(request, "accounts/doctor_patients.html", {
         "patients": patients,
-        "pending_count": pending_count,
+        "pending_count": pending_requests.count(),
         "pending_requests": pending_requests,
     })
 
@@ -152,16 +146,34 @@ def doctor_patient_detail(request, patient_id):
 
     meals = meals.order_by("-date")
 
-    xe_by_day_chart = (
+    # 📅 Сумма ХЕ по дням
+    xe_by_day_chart = list(
         meals.values("date")
         .annotate(total_xe=Sum("xe"))
         .order_by("date")
     )
 
-    total_xe = meals.aggregate(total=Sum("xe"))["total"] or 0
-    days_count = xe_by_day_chart.count()
-    average_xe = round(total_xe / days_count, 2) if days_count else 0
-    daily_norm = patient.get_daily_xe_norm() or 0
+    # 🔥 ОКРУГЛЯЕМ каждый день
+    for day in xe_by_day_chart:
+        day["total_xe"] = round(float(day["total_xe"] or 0), 2)
+
+    # Общая сумма
+    total_xe = round(
+        sum(day["total_xe"] for day in xe_by_day_chart),
+        2
+    )
+
+    days_count = len(xe_by_day_chart)
+
+    average_xe = round(
+        total_xe / days_count,
+        2
+    ) if days_count else 0
+
+    daily_norm = round(
+        float(patient.get_daily_xe_norm() or 0),
+        2
+    )
 
     deviation_percent = (
         round(((average_xe - daily_norm) / daily_norm) * 100, 1)
@@ -175,8 +187,9 @@ def doctor_patient_detail(request, patient_id):
     else:
         status = "Критично"
 
+    # 📈 Данные для графика
     dates = [str(day["date"]) for day in xe_by_day_chart]
-    totals = [float(day["total_xe"]) for day in xe_by_day_chart]
+    totals = [day["total_xe"] for day in xe_by_day_chart]
     norm_line = [daily_norm for _ in totals]
 
     return render(request, "accounts/doctor_patient_detail.html", {
@@ -191,6 +204,7 @@ def doctor_patient_detail(request, patient_id):
         "norm_line": json.dumps(norm_line),
         "start_date": start_date,
         "end_date": end_date,
+        "xe_by_day": xe_by_day_chart,
     })
 
 
@@ -236,10 +250,8 @@ def doctor_patient_pdf(request, patient_id):
         f'attachment; filename="patient_{patient.username}_report.pdf"'
     )
 
-    # Unicode шрифт
     pdfmetrics.registerFont(UnicodeCIDFont("HYSMyeongJo-Medium"))
 
-    # ✅ УМЕНЬШЕННЫЕ ПОЛЯ
     doc = SimpleDocTemplate(
         response,
         rightMargin=20,
@@ -254,7 +266,7 @@ def doctor_patient_pdf(request, patient_id):
         name="TitleCyr",
         fontName="HYSMyeongJo-Medium",
         fontSize=14,
-        spaceAfter=6,   # уменьшили
+        spaceAfter=6,
     )
 
     normal_style = ParagraphStyle(
@@ -267,7 +279,7 @@ def doctor_patient_pdf(request, patient_id):
     elements.append(Spacer(1, 0.15 * inch))
 
     total_xe = meals.aggregate(total=Sum("xe"))["total"] or 0
-    elements.append(Paragraph(f"Общий ХЕ: {total_xe:.2f}", normal_style))
+    elements.append(Paragraph(f"Общий ХЕ: {round(total_xe, 2):.2f}", normal_style))
     elements.append(Spacer(1, 0.15 * inch))
 
     data = [["Дата", "Продукт", "Вес (г)", "ХЕ"]]
@@ -277,7 +289,7 @@ def doctor_patient_pdf(request, patient_id):
             str(meal.date),
             meal.product.name,
             f"{meal.weight:.0f}",
-            f"{meal.xe:.2f}" if meal.xe else "—"
+            f"{round(meal.xe, 2):.2f}" if meal.xe else "—"
         ])
 
     table = Table(data, repeatRows=1)
@@ -290,7 +302,6 @@ def doctor_patient_pdf(request, patient_id):
     ]))
 
     elements.append(table)
-
     doc.build(elements)
 
     return response
